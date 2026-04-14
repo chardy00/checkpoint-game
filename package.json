@@ -1,0 +1,63 @@
+{
+  "name": "checkpoint-border-control",
+  "version": "1.0.0",
+  "description": "CHECKPOINT — Biometric Border Control",
+  "main": "main.js",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "start":      "electron .",
+    "dev":        "electron . --enable-logging",
+    "build":      "electron-builder --mac",
+    "build-win":  "electron-builder --win",
+    "build-linux":"electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron":         "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId":       "com.checkpoint.game",
+    "productName": "CHECKPOINT",
+    "copyright":   "Copyright © 2026",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/.cache",
+      "!dist/**",
+      "!scripts/**"
+    ],
+    "mac": {
+      "category": "public.app-category.games",
+      "icon":     "assets/icon.png",
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] },
+        { "target": "zip", "arch": ["arm64", "x64"] }
+      ]
+    },
+    "win": {
+      "icon":                      "assets/icon.png",
+      "requestedExecutionLevel":   "asInvoker",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick":                          false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut":             true,
+      "createStartMenuShortcut":           true,
+      "shortcutName":                      "CHECKPOINT"
+    },
+    "linux": {
+      "icon":   "assets/icon.png",
+      "target": ["AppImage"]
+    },
+    "dmg": {
+      "title":  "CHECKPOINT",
+      "window": { "width": 600, "height": 400 }
+    }
+  }
+}

@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CHECKPOINT — Biometric Border Control</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    /* ═══════════════════════════════════════════════════════
+       RESET
+    ═══════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ═══════════════════════════════════════════════════════
+       CUSTOM PROPERTIES
+    ═══════════════════════════════════════════════════════ */
+    :root {
+      /* Desk surface */
+      --desk:           #2c1810;
+      --desk-mid:       #3a2015;
+      --desk-dark:      #0f0804;
+      --desk-border:    #4a2a18;
+      --desk-grain:     rgba(180,100,40,0.15);
+
+      /* Paper */
+      --paper:          #e8d5b0;
+      --paper-aged:     #d4b896;
+      --paper-line:     rgba(0,0,0,0.07);
+      --paper-shadow:   rgba(0,0,0,0.45);
+      --paper-edge:     rgba(0,0,0,0.12);
+
+      /* Ink */
+      --ink:            #1a1a1f;
+      --ink-faded:      #5a4020;
+      --ink-red:        #c41e3a;
+      --ink-green:      #1a5c2e;
+      --ink-label:      #3a2a10;
+
+      /* Original palette — kept for JS-driven dynamic classes */
+      --bg:             #0a0a0a;
+      --panel:          #13161b;
+      --panel-alt:      #1a1e26;
+      --border:         #2a2f3a;
+      --accent:         #00d4ff;
+      --accent-dim:     #007a94;
+      --green:          #00ff88;
+      --red:            #ff3355;
+      --yellow:         #ffcc00;
+      --orange:         #ff8800;
+      --text:           #c8d0dc;
+      --text-dim:       #5a6378;
+      --text-bright:    #ffffff;
+
+      /* Fonts */
+      --font-mono:      'Courier Prime', 'Courier New', monospace;
+      --font-pixel:     'Press Start 2P', 'Courier New', monospace;
+      --font-doc:       'Courier Prime', 'Courier New', monospace;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       BODY / LETTERBOX SHELL
+    ═══════════════════════════════════════════════════════ */
+    html, body {
+      width: 100%; height: 100%;
+      background: #0a0a0a;
+      overflow: hidden;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    /* Full-screen centering wrapper */
+    #game-wrap {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       ELECTRON TITLEBAR  (outside game-wrap, fixed)
+    ═══════════════════════════════════════════════════════ */
+    #titlebar {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 28px;
+      background: #0a0804;
+      border-bottom: 1px solid var(--desk-border);
+      -webkit-app-region: drag;
+      user-select: none;
+      align-items: center;
+      padding: 0 6px 0 12px;
+      justify-content: space-between;
+      z-index: 10000;
+    }
+    body.electron #titlebar       { display: flex; }
+    body.electron #game-wrap      { top: 28px; }
+
+    .tb-logo {
+      font-family: var(--font-pixel);
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: #6b4020;
+      -webkit-app-region: no-drag;
+    }
+    .tb-controls {
+      display: flex;
+      -webkit-app-region: no-drag;
+    }
+    .tb-btn {
+      width: 40px; height: 28px;
+      border: none; background: transparent;
+      color: #5a3020; font-size: 14px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tb-btn:hover            { background: rgba(255,160,80,0.1); color: #c8a080; }
+    .tb-btn.tb-close:hover   { background: #8b0000; color: #fff; }
+
+    /* ═══════════════════════════════════════════════════════
+       CRT OVERLAY
+    ═══════════════════════════════════════════════════════ */
+    #crt-overlay {
+      position: absolute; inset: 0;
+      pointer-events: none;
+      z-index: 9998;
+      display: none;
+    }
+    body.crt-on #crt-overlay { display: block; }
+    #crt-overlay::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 1px,
+        rgba(0,0,0,0.15) 1px, rgba(0,0,0,0.15) 2px
+      );
+    }
+    #crt-overlay::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%);
+    }
+    @keyframes crt-flicker { 0%,100%{opacity:1} 50%{opacity:0.994} }
+    body.crt-on { animation: crt-flicker 0.12s infinite; }
+
+    /* ═══════════════════════════════════════════════════════
+       QUALITY / FONT SIZE LEVELS  (preserved for settings JS)
+    ═══════════════════════════════════════════════════════ */
+    body.quality-low *  { animation: none !important; transition: none !important; }
+    body.quality-high .bio-result.ok   { text-shadow: 0 0 8px var(--green); }
+    body.quality-high .bio-result.fail { text-shadow: 0 0 8px var(--red); }
+    body.font-small  { font-size: 11px; }
+    body.font-medium { font-size: 13px; }
+    body.font-large  { font-size: 15px; }
+
+    /* ═══════════════════════════════════════════════════════
+       GAME APP — 1280 × 720 fixed stage
+    ═══════════════════════════════════════════════════════ */
+    #app {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      transform-origin: center center;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+
+      /* Wood desk base colour */
+      background-color: var(--desk);
+
+      /* Wood grain texture via layered repeating-linear-gradients */
+      background-image:
+        /* Horizontal grain lines */
+        repeating-linear-gradient(
+          0deg,
+          transparent            0px,
+          transparent            9px,
+          rgba(0,0,0,0.04)      9px,
+          rgba(0,0,0,0.04)      10px
+        ),
+        /* Vertical knot/wave shimmer */
+        repeating-linear-gradient(
+          88deg,
+          transparent                0px,
+          rgba(255,180,80,0.014)    30px,
+          transparent               31px,
+          transparent               80px,
+          rgba(0,0,0,0.03)          81px,
+          transparent               82px,
+          transparent              150px
+        ),
+        /* Overall depth gradient */
+        linear-gradient(180deg,
+          #3d2215  0%,
+          #2c1810 35%,
+          #221208 70%,
+          #150c06 100%
+        );
+    }
+
+    /* Film-grain noise overlay (SVG data URI trick) */
+    #app::after {
+      content: '';
+      position: absolute; inset: 0;
+      pointer-events: none;
+      z-index: 9980;
+      opacity: 0.055;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 256px 256px;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       TOP STATUS BAR  — wood-framed HUD strip
+    ═══════════════════════════════════════════════════════ */
+    #topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 44px;
+      background: linear-gradient(180deg, #1e1008 0%, #0f0804 100%);
+      border-bottom: 2px solid var(--desk-border);
+      padding: 0 18px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 100;
+      box-shadow: 0 3px 16px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,180,80,0.06);
+    }
+
+    #topbar .logo {
+      font-family: var(--font-pixel);
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: #8b5c3a;
+      text-transform: uppercase;
+    }
+
+    #topbar .status-group {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .status-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+    }
+    .status-item .label {
+      font-family: var(--font-pixel);
+      font-size: 6px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #5a3820;
+    }
+    .status-item .value {
+      font-family: var(--font-pixel);
+      font-size: 10px;
+      color: #c8a060;
+    }
+    .status-item .value.green  { color: var(--green); }
+    .status-item .value.yellow { color: var(--yellow); }
+    .status-item .value.red    { color: var(--red); }
+
+    #streak-display {
+      font-family: var(--font-pixel);
+      font-size: 7px;
+      letter-spacing: 1px;
+      color: #5a3820;
+    }
+    #streak-display.active { color: var(--yellow); }
+    #stat-score            { color: var(--accent); }
+
+    /* ═══════════════════════════════════════════════════════
+       ALERT BAR
+    ═══════════════════════════════════════════════════════ */
+    #alert-bar {
+      display: none;
+      height: 26px;
+      background: var(--red);
+      color: #fff;
+      font-family: var(--font-pixel);
+      font-size: 7px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      align-items: center;
+      justify-content: center;
+      animation: blink 1s infinite;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+    #alert-bar.show { display: flex; }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+    /* ═══════════════════════════════════════════════════════
+       DESK SURFACE — 3-column main area
+    ═══════════════════════════════════════════════════════ */
+    #desk-surface {
+      flex: 1;
+      position: relative;
+      display: grid;
+      grid-template-columns: 196px 1fr 276px;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       LEFT PANEL — dossier holder / queue area
+    ═══════════════════════════════════════════════════════ */
+    #left-panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: rgba(0,0,0,0.18);
+      border-right: 1px solid rgba(180,100,40,0.18);
+    }
+
+    .panel-header {
+      padding: 5px 10px;
+      font-family: var(--font-pixel);
+      font-size: 6px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #6b4020;
+      border-bottom: 1px solid rgba(180,100,40,0.2);
+      background: rgba(0,0,0,0.22);
+      flex-shrink: 0;
+    }
+
+    /* ── Character portrait ─────────────────────────── */
+    #passenger-profile {
+      padding: 10px 10px 8px;
+      border-bottom: 1px solid rgba(180,100,40,0.15);
+      flex-shrink: 0;
+    }
+
+    #passenger-photo {
+      width: 76px;
+      height: 96px;
+      background: #12121a;
+      border: 2px solid #2a2a38;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        2px 2px 0 rgba(0,0,0,0.5),
+        3px 3px 10px rgba(0,0,0,0.6),
+        inset 0 0 18px rgba(0,0,0,0.4);
+    }
+
+    #passenger-photo svg {
+      width: 42px; height: 54px;
+      opacity: 0.18;
+      color: #6070a0;
+    }
+
+    #passenger-photo .photo-overlay {
+      position: absolute;
+      bottom: 3px; right: 4px;
+      font-family: var(--font-pixel);
+      font-size: 5px;
+      color: #2a3050;
+    }
+
+    /* Scanning line sweeping down the photo */
+    #passenger-photo::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; top: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(0,212,255,0.5), transparent);
+      animation: photo-scan 3.5s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes photo-scan { 0%{top:0%} 100%{top:100%} }
+
+    #passenger-name {
+      font-family: var(--font-pixel);
+      font-size: 7px;
+      color: #c8a060;
+      margin-bottom: 5px;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+
+    #passenger-meta {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: #7a5838;
+      line-height: 1.6;
+    }
+
+    #passenger-behavior {
+      margin-top: 6px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-style: italic;
+      color: var(--yellow);
+      padding: 5px 7px;
+      background: rgba(255,204,0,0.06);
+      border-left: 2px solid rgba(255,204,0,0.35);
+    }
+
+    /* ── Queue list ────────────────────────────────── */
+    #queue-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 5px;
+      min-height: 0;
+      max-height: 120px;
+    }
+
+    .queue-item {
+      padding: 4px 6px;
+      margin-bottom: 3px;
+      background: rgba(0,0,0,0.15);
+      border: 1px solid rgba(180,100,40,0.12);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: #7a5838;
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+    .queue-item.current {
+      border-color: rgba(200,160,96,0.45);
+      color: #c8a060;
+      background: rgba(200,160,96,0.06);
+    }
+    .queue-item .q-num {
+      font-family: var(--font-pixel);
+      font-size: 6px;
+      color: #5a3820;
+      min-width: 16px;
+    }
+
+    .queue-badge {
+      font-family: var(--font-pixel);
+      font-size: 6px;
+      padding: 1px 4px;
+      margin-left: auto;
+    }
+    .queue-badge.done-ok  { color: var(--green); }
+    .queue-badge.done-err { color: var(--red); }
+
+    /* ── Bulletin board ────────────────────────────── */
+    #bulletin-board {
+      border-top: 1px solid rgba(180,100,40,0.15);
+      flex-shrink: 0;
+    }
+    #bulletin-content {
+      padding: 6px 10px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: #7a5838;
+      line-height: 1.6;
+      max-height: 80px;
+      overflow: hidden;
+    }
+
+    /* ── Family panel ──────────────────────────────── */
+    #family-panel {
+      border-top: 1px solid rgba(180,100,40,0.15);
+      flex-shrink: 0;
+    }
+
+    .family-member {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .family-member:last-child { border-bottom: none; }
+
+    .member-icon     { font-size: 12px; width: 16px; text-align: center; flex-shrink: 0; }
+    .member-info     { flex: 1; }
+    .member-name     { font-family: var(--font-mono); font-size: 10px; color: #c8a060; font-weight: bold; }
+    .member-relation { font-family: var(--font-pixel); font-size: 5px; color: #5a3820; text-transform: uppercase; letter-spacing: 1px; }
+
+    .member-health {
+      font-family: var(--font-pixel);
+      font-size: 6px;
+      font-weight: bold;
+      padding: 2px 5px;
+    }
+    .health-healthy  { color: var(--green); }
+    .health-hungry   { color: var(--yellow); }
+    .health-cold     { color: #88ccff; }
+    .health-sick     { color: var(--orange); }
+    .health-critical { color: var(--red); animation: blink 1s infinite; }
+    .health-dead     { color: #444; text-decoration: line-through; }
+
+    /* ── Morality panel ────────────────────────────── */
+    #moral-panel {
+      border-top: 1px solid rgba(180,100,40,0.15);
+      flex-shrink: 0;
+    }
+
+    .moral-row {
+      padding: 3px 10px;
+    }
+    .moral-labels {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-pixel);
+      font-size: 5px;
+      color: #5a3820;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+    .moral-bar-track {
+      height: 3px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 1px;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       CENTER PANEL — document workspace
+    ═══════════════════════════════════════════════════════ */
+    #center-panel {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Document folder tabs ──────────────────────── */
+    #doc-tabs {
+      display: flex;
+      gap: 2px;
+      padding: 10px 16px 0;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 20;
+    }
+
+    .doc-tab {
+      padding: 5px 13px;
+      font-family: var(--font-pixel);
+      font-size: 6px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #8b6040;
+      cursor: pointer;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(180,100,40,0.25);
+      border-bottom: none;
+      user-select: none;
+      transition: background 0.15s, color 0.15s;
+    }
+    .doc-tab:hover  { background: rgba(200,160,96,0.12); color: #c8a060; }
+    .doc-tab.active {
+      background: var(--paper-aged, #d4b896);
+      color: var(--ink, #1a1a1f);
+      border-color: rgba(0,0,0,0.2);
+    }
+    .doc-tab.flagged { color: var(--red) !important; }
+
+    /* ── Document workspace (desk area) ────────────── */
+    #doc-content-wrap {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 14px 20px 14px;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* THE PHYSICAL PAPER DOCUMENT */
+    #doc-content {
+      position: relative;
+      background-color: var(--paper, #e8d5b0);
+      color: var(--ink, #1a1a1f);
+      width: 360px;
+      min-height: 460px;
+      max-height: 100%;
+      overflow-y: auto;
+
+      /* Paper depth shadow */
+      box-shadow:
+        -2px  2px 0   rgba(0,0,0,0.08),
+         3px  4px 12px rgba(0,0,0,0.45),
+         7px  8px 28px rgba(0,0,0,0.32),
+         0    0   0    1px rgba(0,0,0,0.14);
+
+      /* Lined paper texture */
+      background-image:
+        repeating-linear-gradient(
+          0deg,
+          transparent            0px,
+          transparent            23px,
+          rgba(0,0,0,0.055)      23px,
+          rgba(0,0,0,0.055)      24px
+        ),
+        linear-gradient(180deg, #ede0c0 0%, #e8d5b0 40%, #e3ccA0 100%);
+
+      /* Default slight tilt */
+      transform: rotate(-0.8deg);
+      transform-origin: top center;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+      /* Draggable feel */
+      cursor: grab;
+      user-select: none;
+      z-index: 10;
+    }
+
+    /* Worn edges inset */
+    #doc-content::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      box-shadow:
+        inset 4px  4px 10px rgba(0,0,0,0.10),
+        inset -3px -3px 10px rgba(0,0,0,0.10);
+    }
+
+    #doc-content:active { cursor: grabbing; }
+
+    /* Lift state (applied by JS) */
+    #doc-content.dragging {
+      box-shadow:
+        -4px  4px 0   rgba(0,0,0,0.1),
+         8px 10px 24px rgba(0,0,0,0.6),
+        16px 18px 44px rgba(0,0,0,0.38),
+         0    0   0    1px rgba(0,0,0,0.18);
+    }
+
+    /* Empty / awaiting state */
+    #doc-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 420px;
+      gap: 14px;
+      pointer-events: none;
+    }
+
+    #doc-empty svg { opacity: 0.12; color: #8b5c3a; }
+
+    #doc-empty p {
+      font-family: var(--font-pixel);
+      font-size: 7px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(139,92,58,0.25);
+    }
+
+    /* ── Document content — written by ui.js ─────── */
+    .passport-doc {
+      padding: 18px 16px;
+    }
+
+    .passport-doc .doc-title {
+      text-align: center;
+      font-family: var(--font-pixel);
+      font-size: 6px;
+      letter-spacing: 2px;
+      color: var(--ink-label, #3a2a10);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(0,0,0,0.12);
+    }
+
+    .passport-doc .doc-country {
+      text-align: center;
+      font-family: var(--font-pixel);
+      font-size: 8px;
+      color: var(--ink, #1a1a1f);
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+      padding: 5px 8px;
+      border: 2px solid rgba(0,0,0,0.14);
+      background: rgba(0,0,0,0.04);
+    }
+
+    .doc-field {
+      display: grid;
+      grid-template-columns: 108px 1fr;
+      gap: 3px;
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+    }
+    .doc-field:last-child { border-bottom: none; }
+
+    .doc-field .field-label {
+      font-family: var(--font-pixel);
+      font-size: 6px;
+      color: #5a4020;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding-top: 1px;
+    }
+
+    .doc-field .field-value {
+      font-family: var(--font-doc);
+      font-size: 12px;
+      color: var(--ink, #1a1a1f);
+      font-weight: bold;
+    }
+
+    .doc-field .field-value.anomaly {
+      color: var(--ink-red, #c41e3a);
+      text-decoration: underline wavy var(--ink-red, #c41e3a);
+    }
+    .doc-field .field-value.warn { color: #8b5000; }
+    .doc-field .field-value.ok   { color: var(--ink-green, #1a5c2e); }
+
+    /* MRZ zone */
+    .mrz-block {
+      margin-top: 12px;
+      padding: 7px 9px;
+      background: rgba(0,0,0,0.07);
+      border: 1px solid rgba(0,0,0,0.1);
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      color: #2a1a08;
+      letter-spacing: 1.5px;
+      word-break: break-all;
+      line-height: 2;
+    }
+    .mrz-block .mrz-label {
+      font-family: var(--font-pixel);
+      font-size: 5px;
+      color: #8b6040;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    /* RFID chip block */
+    .chip-block {
+      margin-top: 10px;
+      padding: 9px;
+      background: rgba(0,0,0,0.06);
+      border: 1px solid rgba(0,212,255,0.18);
+    }
+    .chip-block .chip-header {
+      font-family: var(--font-pixel);
+      font-size: 6px;
+      letter-spacing: 1px;
+      color: #1a5070;
+      margin-bottom: 7px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .chip-indicator {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+    /* ── Ink stamp marks (appended to #doc-content by JS) ── */
+    .ink-stamp {
+      position: absolute;
+      width: 104px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-pixel);
+      font-size: 8px;
+      letter-spacing: 2px;
+      border-radius: 3px;
+      border: 3px solid;
+      pointer-events: none;
+      z-index: 40;
+      animation: ink-appear 0.38s ease-out forwards;
+    }
+    .ink-stamp.approve {
+      color: rgba(26,92,46,0.82);
+      border-color: rgba(26,92,46,0.65);
+      transform: rotate(-8deg);
+    }
+    .ink-stamp.deny {
+      color: rgba(196,30,58,0.82);
+      border-color: rgba(196,30,58,0.65);
+      transform: rotate(5deg);
+    }
+    .ink-stamp.detain {
+      color: rgba(180,80,0,0.82);
+      border-color: rgba(180,80,0,0.65);
+      transform: rotate(-3deg);
+    }
+    @keyframes ink-appear {
+      0%   { opacity:0; transform:scale(0.15) rotate(-5deg); }
+      38%  { opacity:1; transform:scale(1.12) rotate(inherit); }
+      60%  { opacity:0.92; transform:scale(0.96) rotate(inherit); }
+      100% { opacity:0.78; transform:scale(1) rotate(inherit); }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       RIGHT PANEL — scanner device + DB + notes
+    ═══════════════════════════════════════════════════════ */
+    #right-panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: rgba(0,0,0,0.28);
+      border-left: 1px solid rgba(180,100,40,0.18);
+    }
+
+    /* ── Biometric section ─────────────────────────── */
+    #biometric-section {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(180,100,40,0.15);
+      flex-shrink: 0;
+      background: rgba(0,0,0,0.2);
+    }
+
+    .bio-check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+      padding: 7px 8px;
+      background: rgba(0,0,0,0.32);
+      border: 1px solid rgba(180,100,40,0.14);
+    }
+    .bio-check:last-child { margin-bottom: 0; }
+
+    .bio-check .bio-icon {
+      width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0;
+    }
+    .bio-check .bio-info { flex: 1; }
+    .bio-check .bio-name {
+      font-family: var(--font-pixel);
+      font-size: 6px;
+      color: #5a3820;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+
+    .bio-check .bio-result {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .bio-check .bio-result.ok      { color: var(--green); }
+    .bio-check .bio-result.warn    { color: var(--yellow); }
+    .bio-check .bio-result.fail    { color: var(--red); }
+    .bio-check .bio-result.pending { color: #4a3820; }
+
+    .bio-bar {
+      height: 3px;
+      background: rgba(0,0,0,0.5);
+      margin-top: 4px;
+      border-radius: 1px;
+      overflow: hidden;
+    }
+    .bio-bar-fill {
+      height: 100%;
+      border-radius: 1px;
+      background: #3a2a18;
+      transition: width 0.6s ease, background 0.3s ease;
+    }
+
+    /* ── Database checks ───────────────────────────── */
+    #db-section {
+      padding: 9px 12px;
+      border-bottom: 1px solid rgba(180,100,40,0.15);
+      flex-shrink: 0;
+    }
+
+    .db-check {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .db-check:last-child { border-bottom: none; }
+    .db-check .db-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: #6b4820;
+    }
+    .db-check .db-status {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: bold;
+    }
+    .db-check .db-status.ok      { color: var(--green); }
+    .db-check .db-status.alert   { color: var(--red); }
+    .db-check .db-status.warn    { color: var(--yellow); }
+    .db-check .db-status.pending { color: #4a3820; }
+
+    /* ── Notes / Flags ─────────────────────────────── */
+    #notes-section {
+      padding: 9px 12px;
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+    }
+    #notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .note-item {
+      padding: 6px 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      border-left: 3px solid rgba(255,255,255,0.15);
+      background: rgba(0,0,0,0.22);
+      color: var(--text-dim);
+    }
+    .note-item.info   { border-color: var(--accent);  color: #6ab0c0; }
+    .note-item.warn   { border-color: var(--yellow);  color: #b09040; background: rgba(255,204,0,0.06); }
+    .note-item.danger { border-color: var(--red);     color: #b04050; background: rgba(255,51,85,0.06); }
+
+    /* ═══════════════════════════════════════════════════════
+       SCANNING ANIMATION
+    ═══════════════════════════════════════════════════════ */
+    .scanning { animation: scan-pulse 0.8s infinite; }
+    @keyframes scan-pulse { 0%,100%{opacity:1} 50%{opacity:0.28} }
+
+    /* ═══════════════════════════════════════════════════════
+       BOTTOM ACTION BAR — physical desk stamps
+    ═══════════════════════════════════════════════════════ */
+    #action-bar {
+      display: flex;
+      gap: 14px;
+      padding: 10px 22px;
+      background: linear-gradient(180deg, #1e1008 0%, #0f0804 100%);
+      border-top: 2px solid var(--desk-border);
+      flex-shrink: 0;
+      align-items: center;
+      height: 76px;
+      position: relative;
+      z-index: 100;
+      box-shadow: 0 -3px 16px rgba(0,0,0,0.7), inset 0 -1px 0 rgba(255,180,80,0.05);
+    }
+
+    /* Stamp wrapper (allows label below) */
+    .stamp-pad {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    /* ── Circular stamp buttons ─────────────────────── */
+    .action-btn {
+      position: relative;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-pixel);
+      font-size: 5px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 3px;
+      user-select: none;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .action-btn:disabled { opacity: 0.28; cursor: not-allowed; }
+
+    /* Press-down active state */
+    .action-btn:not(:disabled):active {
+      transform: translateY(4px) scale(0.91) !important;
+    }
+
+    .btn-symbol { font-size: 16px; line-height: 1; }
+
+    /* Approve — green rubber stamp */
+    .btn-approve {
+      background: radial-gradient(circle at 38% 32%, #2d9050, #1a5c2e);
+      color: #a0ffc0;
+      box-shadow:
+        0 5px 0 #0f3a1e,
+        0 7px 14px rgba(0,0,0,0.55),
+        inset 0 1px 4px rgba(255,255,255,0.22);
+    }
+    .btn-approve:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 0 #0f3a1e, 0 10px 20px rgba(0,80,40,0.45), inset 0 1px 4px rgba(255,255,255,0.22);
+    }
+
+    /* Deny — red rubber stamp */
+    .btn-deny {
+      background: radial-gradient(circle at 38% 32%, #d42a40, #8b0e22);
+      color: #ffa0a8;
+      box-shadow:
+        0 5px 0 #5a0010,
+        0 7px 14px rgba(0,0,0,0.55),
+        inset 0 1px 4px rgba(255,255,255,0.22);
+    }
+    .btn-deny:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 0 #5a0010, 0 10px 20px rgba(130,20,40,0.45), inset 0 1px 4px rgba(255,255,255,0.22);
+    }
+
+    /* Detain — amber stamp */
+    .btn-detain {
+      background: radial-gradient(circle at 38% 32%, #cc6600, #8b4000);
+      color: #ffcA80;
+      box-shadow:
+        0 5px 0 #5a2800,
+        0 7px 14px rgba(0,0,0,0.55),
+        inset 0 1px 4px rgba(255,255,255,0.22);
+    }
+    .btn-detain:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 0 #5a2800, 0 10px 20px rgba(130,70,0,0.45), inset 0 1px 4px rgba(255,255,255,0.22);
+    }
+
+    /* Flag — yellow marker */
+    .btn-flag {
+      background: radial-gradient(circle at 38% 32%, #ccaa00, #8b7200);
+      color: #fff0a0;
+      box-shadow:
+        0 5px 0 #5a4800,
+        0 7px 14px rgba(0,0,0,0.55),
+        inset 0 1px 4px rgba(255,255,255,0.22);
+    }
+    .btn-flag:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 0 #5a4800, 0 10px 20px rgba(130,110,0,0.45), inset 0 1px 4px rgba(255,255,255,0.22);
+    }
+
+    /* ── Stamp-press animation (JS adds/removes) ───── */
+    @keyframes stamp-press {
+      0%   { transform: translateY(-22px) scale(1.04); }
+      42%  { transform: translateY(5px)   scale(0.9); }
+      58%  { transform: translateY(-1px)  scale(0.97); }
+      100% { transform: translateY(0)     scale(1); }
+    }
+    .stamp-pressing { animation: stamp-press 0.36s ease-out forwards; }
+
+    /* ── Utility buttons (Rules / Settings) ──────── */
+    .btn-util {
+      width: auto;
+      height: 38px;
+      border-radius: 3px;
+      padding: 0 13px;
+      font-family: var(--font-pixel);
+      font-size: 6px;
+      letter-spacing: 1px;
+      border: 1px solid rgba(180,100,40,0.3);
+      background: rgba(0,0,0,0.35);
+      color: #6b4020;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      text-transform: uppercase;
+    }
+    .btn-util:hover { background: rgba(200,160,96,0.1); color: #c8a060; }
+
+    #action-info {
+      margin-left: auto;
+      font-family: var(--font-pixel);
+      font-size: 6px;
+      letter-spacing: 1px;
+      color: #5a3820;
+      text-align: right;
+      max-width: 140px;
+      line-height: 1.8;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       MODAL OVERLAY  (inside #app so it scales with game)
+    ═══════════════════════════════════════════════════════ */
+    #modal-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 9000;
+      align-items: center;
+      justify-content: center;
+    }
+    #modal-overlay.show { display: flex; }
+
+    #modal-box {
+      background: #13161b;
+      border: 1px solid rgba(180,100,40,0.25);
+      padding: 28px 30px;
+      max-width: 700px;
+      width: 90%;
+      max-height: 86%;
+      overflow-y: auto;
+      box-shadow:
+        4px 4px 0 rgba(0,0,0,0.3),
+        0 12px 48px rgba(0,0,0,0.8);
+      transform: rotate(-0.25deg);
+    }
+
+    #modal-title {
+      font-family: var(--font-pixel);
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-bright);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #modal-body {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    #modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    /* Override stamp shape for modal action buttons */
+    #modal-actions .action-btn {
+      width: auto !important;
+      height: auto !important;
+      border-radius: 2px !important;
+      padding: 8px 16px !important;
+      font-size: 8px !important;
+      letter-spacing: 1px !important;
+      flex-direction: row !important;
+      gap: 0 !important;
+    }
+    #modal-actions .btn-approve { box-shadow: 0 2px 0 #0f3a1e, 0 4px 8px rgba(0,0,0,0.4); }
+    #modal-actions .btn-deny    { box-shadow: 0 2px 0 #5a0010, 0 4px 8px rgba(0,0,0,0.4); }
+    #modal-actions .btn-flag    { box-shadow: 0 2px 0 #5a4800, 0 4px 8px rgba(0,0,0,0.4); }
+
+    /* ── Expense rows inside modal ─────────────────── */
+    .expense-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+    .expense-row:hover { background: rgba(255,255,255,0.03); }
+    .expense-row.selected      { border-color: var(--accent);  background: rgba(0,212,255,0.06); }
+    .expense-row.required-sick { border-color: var(--orange);  animation: blink 1.5s infinite; }
+    .expense-row.cant-afford   { opacity: 0.5; cursor: not-allowed; }
+
+    .expense-check {
+      width: 16px; height: 16px;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; flex-shrink: 0; color: var(--text);
+    }
+    .expense-row.selected .expense-check { border-color: var(--accent); color: var(--accent); }
+    .expense-icon        { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; }
+    .expense-label       { flex: 1; }
+    .expense-name        { font-family: var(--font-pixel); font-size: 8px; color: var(--text-bright); font-weight: bold; }
+    .expense-consequence { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+    .expense-cost        { font-family: var(--font-pixel); font-size: 9px; color: var(--yellow); flex-shrink: 0; }
+    .expense-row.cant-afford .expense-cost { color: var(--red); }
+
+    /* ── Portrait idle bob ─────────────────────────────── */
+    #passenger-photo {
+      animation: portrait-bob 2.4s ease-in-out infinite;
+    }
+    body.quality-low #passenger-photo { animation: none; }
+
+    @keyframes portrait-bob {
+      0%,  100% { transform: translateY(0px); }
+      50%        { transform: translateY(-2px); }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       PART 6 — PASSENGER & DOCUMENT ANIMATIONS
+    ═══════════════════════════════════════════════════════ */
+
+    /* Passenger walks in from the left */
+    @keyframes walk-in {
+      from { transform: translateX(-60px); opacity: 0; }
+      to   { transform: translateX(0);     opacity: 1; }
+    }
+    .walk-in { animation: walk-in 0.4s ease-out forwards; }
+
+    /* Document panel slides up */
+    @keyframes doc-slide {
+      from { transform: translateY(40px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    .doc-slide { animation: doc-slide 0.32s ease-out forwards; }
+
+    /* Bio scan line sweeps portrait */
+    @keyframes bio-scan {
+      from { top: 0%; opacity: 0.9; }
+      to   { top: 100%; opacity: 0.2; }
+    }
+    .bio-scan-line {
+      position: absolute;
+      left: 0; right: 0; height: 2px;
+      background: rgba(0, 255, 136, 0.7);
+      box-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+      animation: bio-scan 0.65s linear forwards;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Alert flash — 3× red border pulse */
+    @keyframes alert-flash {
+      0%          { box-shadow: none; }
+      16%, 50%    { box-shadow: inset 0 0 0 2px var(--red), 0 0 12px rgba(255,60,60,0.25); }
+      33%, 66%    { box-shadow: none; }
+      83%         { box-shadow: inset 0 0 0 2px var(--red); }
+      100%        { box-shadow: none; }
+    }
+    .alert-flash { animation: alert-flash 1.2s ease forwards; }
+
+    /* Money counter tick */
+    @keyframes money-tick {
+      0%   { transform: scale(1);    color: inherit; }
+      40%  { transform: scale(1.22); color: var(--yellow); }
+      100% { transform: scale(1);    color: inherit; }
+    }
+    .money-tick { animation: money-tick 0.32s ease forwards; }
+
+    /* ANIMUS corner symbol fade */
+    @keyframes animus-fade {
+      0%   { opacity: 0.22; }
+      70%  { opacity: 0.18; }
+      100% { opacity: 0; }
+    }
+
+    /* Queue item slide-in */
+    @keyframes queue-slide {
+      from { transform: translateX(20px); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+    .queue-item { animation: queue-slide 0.2s ease-out forwards; }
+
+    /* Missing document tab styling */
+    .doc-tab.missing-doc {
+      opacity: 0.45;
+      color: var(--text-dim);
+      cursor: default;
+      text-decoration: line-through;
+    }
+
+    /* ── Canvas fills the photo div exactly ─────────────── */
+    #portrait-canvas { display: block; }
+
+    /* ═══════════════════════════════════════════════════════
+       SCROLLBARS
+    ═══════════════════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(180,100,40,0.3); border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(180,100,40,0.5); }
+  </style>
+</head>
+<body>
+
+<!-- ── ELECTRON TITLEBAR (fixed, outside scaling) ─────── -->
+<div id="titlebar">
+  <span class="tb-logo" data-i18n="titlebar.title">CHECKPOINT</span>
+  <div class="tb-controls">
+    <button class="tb-btn"          onclick="window.electronAPI?.minimize()">&#8722;</button>
+    <button class="tb-btn"          onclick="window.electronAPI?.maximize()">&#9633;</button>
+    <button class="tb-btn tb-close" onclick="window.electronAPI?.close()">&#10005;</button>
+  </div>
+</div>
+
+<!-- ── LETTERBOX WRAPPER ───────────────────────────────── -->
+<div id="game-wrap">
+
+<!-- ═══════════════════════════════════════════════════════
+     GAME STAGE  1280 × 720
+═══════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- CRT scanline overlay -->
+  <div id="crt-overlay"></div>
+
+  <!-- ── TOP STATUS BAR ─────────────────────────────── -->
+  <div id="topbar">
+    <div class="logo" data-i18n="logo">&#9632; CHECKPOINT</div>
+    <div class="status-group">
+      <div class="status-item">
+        <span class="label" data-i18n="topbar.day">Day</span>
+        <span class="value" id="stat-day">1</span>
+      </div>
+      <div class="status-item">
+        <span class="label" data-i18n="topbar.time">Time</span>
+        <span class="value" id="stat-time">08:00</span>
+      </div>
+      <div class="status-item">
+        <span class="label" data-i18n="topbar.processed">Processed</span>
+        <span class="value" id="stat-processed">0</span>
+      </div>
+      <div class="status-item">
+        <span class="label" data-i18n="topbar.errors">Errors</span>
+        <span class="value red" id="stat-errors">0</span>
+      </div>
+      <div class="status-item">
+        <span class="label" data-i18n="topbar.balance">Balance</span>
+        <span class="value green" id="stat-money">$0</span>
+      </div>
+      <div class="status-item">
+        <span class="label" data-i18n="topbar.score">Score</span>
+        <span class="value" id="stat-score">0</span>
+      </div>
+      <div id="streak-display" data-i18n="topbar.streak">STREAK: <span id="streak-val">0</span></div>
+      <div class="status-item" id="phantom-indicator" style="display:none">
+        <span class="label">&#9649; PHANTOM</span>
+        <span class="value" id="stat-phantom" style="color:#c0a0ff">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ALERT BAR ────────────────────────────────────── -->
+  <div id="alert-bar" data-i18n="alert.security">&#9888; SECURITY ALERT — ALL OFFICERS REMAIN AT POSTS</div>
+
+  <!-- ── DESK SURFACE (3 columns) ─────────────────────── -->
+  <div id="desk-surface">
+
+    <!-- ═══════════ LEFT PANEL ═══════════ -->
+    <div id="left-panel">
+
+      <div class="panel-header" data-i18n="panel.passenger">Current Passenger</div>
+
+      <div id="passenger-profile">
+        <div id="passenger-photo">
+          <!-- portrait-canvas is drawn by settings.js / drawPassengerPortrait() -->
+          <canvas id="portrait-canvas" width="76" height="96"
+            style="display:block;width:100%;height:100%;image-rendering:pixelated;"></canvas>
+          <span class="photo-overlay" id="photo-overlay-label">NO IMG</span>
+        </div>
+        <div id="passenger-name">—</div>
+        <div id="passenger-meta">—</div>
+        <div id="passenger-behavior" style="display:none"></div>
+      </div>
+
+      <div class="panel-header" data-i18n="panel.queue">Queue</div>
+      <div id="queue-list"></div>
+
+      <!-- Bulletin board -->
+      <div id="bulletin-board">
+        <div class="panel-header" data-i18n="panel.bulletin">&#9632; Today's Bulletin</div>
+        <div id="bulletin-content">Awaiting shift start...</div>
+      </div>
+
+      <!-- Family status -->
+      <div id="family-panel">
+        <div class="panel-header" data-i18n="panel.family">Family</div>
+        <div id="family-members"></div>
+      </div>
+
+      <!-- Morality bars -->
+      <div id="moral-panel">
+        <div class="panel-header" data-i18n="panel.moral">Moral Profile</div>
+        <div style="padding:5px 0 6px">
+          <div class="moral-row">
+            <div class="moral-labels">
+              <span data-i18n="moral.compassion">COMPASSION</span>
+              <span id="moral-compassion-val">0</span>
+            </div>
+            <div class="moral-bar-track">
+              <div id="moral-compassion-bar" style="height:100%;border-radius:1px;background:var(--green);width:0%;transition:width 0.5s"></div>
+            </div>
+          </div>
+          <div class="moral-row">
+            <div class="moral-labels">
+              <span>LOYALTY</span>
+              <span id="moral-loyalty-val">0</span>
+            </div>
+            <div class="moral-bar-track">
+              <div id="moral-loyalty-bar" style="height:100%;border-radius:1px;background:var(--accent);width:0%;transition:width 0.5s"></div>
+            </div>
+          </div>
+          <div class="moral-row">
+            <div class="moral-labels">
+              <span>CORRUPTION</span>
+              <span id="moral-corruption-val">0</span>
+            </div>
+            <div class="moral-bar-track">
+              <div id="moral-corruption-bar" style="height:100%;border-radius:1px;background:var(--red);width:0%;transition:width 0.5s"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /left-panel -->
+
+    <!-- ═══════════ CENTER PANEL ═══════════ -->
+    <div id="center-panel">
+
+      <!-- Folder tabs -->
+      <div id="doc-tabs"></div>
+
+      <!-- Document workspace -->
+      <div id="doc-content-wrap">
+        <!-- THE PAPER — draggable, styled as physical document -->
+        <div id="doc-content">
+          <div id="doc-empty">
+            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+              <rect x="3" y="3" width="18" height="18" rx="1"/>
+              <line x1="7" y1="8"  x2="17" y2="8"/>
+              <line x1="7" y1="12" x2="14" y2="12"/>
+              <line x1="7" y1="16" x2="11" y2="16"/>
+            </svg>
+            <p>Awaiting passenger</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /center-panel -->
+
+    <!-- ═══════════ RIGHT PANEL ═══════════ -->
+    <div id="right-panel">
+
+      <div class="panel-header" data-i18n="panel.biometrics">Biometric Verification</div>
+      <div id="biometric-section">
+        <div class="bio-check" id="bio-face">
+          <div class="bio-icon">&#128065;</div>
+          <div class="bio-info">
+            <div class="bio-name" data-i18n="bio.face">Facial Recognition</div>
+            <div class="bio-result pending" id="bio-face-result" data-i18n="bio.waiting">WAITING...</div>
+            <div class="bio-bar">
+              <div class="bio-bar-fill" id="bio-face-bar" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bio-check" id="bio-finger">
+          <div class="bio-icon">&#128400;</div>
+          <div class="bio-info">
+            <div class="bio-name" data-i18n="bio.finger">Fingerprint Scan</div>
+            <div class="bio-result pending" id="bio-finger-result" data-i18n="bio.waiting">WAITING...</div>
+            <div class="bio-bar">
+              <div class="bio-bar-fill" id="bio-finger-bar" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bio-check" id="bio-chip">
+          <div class="bio-icon">&#128190;</div>
+          <div class="bio-info">
+            <div class="bio-name" data-i18n="bio.chip">RFID Chip Read</div>
+            <div class="bio-result pending" id="bio-chip-result" data-i18n="bio.waiting">WAITING...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-header" data-i18n="panel.database">Database Checks</div>
+      <div id="db-section">
+        <div class="db-check">
+          <span class="db-label" data-i18n="db.interpol">Interpol Watchlist</span>
+          <span class="db-status pending" id="db-interpol">—</span>
+        </div>
+        <div class="db-check">
+          <span class="db-label" data-i18n="db.national">National Blacklist</span>
+          <span class="db-status pending" id="db-national">—</span>
+        </div>
+        <div class="db-check">
+          <span class="db-label" data-i18n="db.visa">Visa Validity</span>
+          <span class="db-status pending" id="db-visa">—</span>
+        </div>
+        <div class="db-check">
+          <span class="db-label" data-i18n="db.ees">EES — Entry/Exit</span>
+          <span class="db-status pending" id="db-ees">—</span>
+        </div>
+        <div class="db-check">
+          <span class="db-label" data-i18n="db.flight">Flight Record</span>
+          <span class="db-status pending" id="db-flight">—</span>
+        </div>
+      </div>
+
+      <div class="panel-header" data-i18n="panel.flags">Flags &amp; Notes</div>
+      <div id="notes-section">
+        <div id="notes-list"></div>
+      </div>
+
+    </div><!-- /right-panel -->
+
+  </div><!-- /desk-surface -->
+
+  <!-- ── BOTTOM ACTION BAR ─────────────────────────── -->
+  <div id="action-bar">
+
+    <!-- APPROVE stamp -->
+    <div class="stamp-pad">
+      <button class="action-btn btn-approve" id="btn-approve" disabled>
+        <span class="btn-symbol">&#10003;</span>
+        <span class="btn-label">APPROVE</span>
+      </button>
+    </div>
+
+    <!-- DENY stamp -->
+    <div class="stamp-pad">
+      <button class="action-btn btn-deny" id="btn-deny" disabled>
+        <span class="btn-symbol">&#10007;</span>
+        <span class="btn-label">DENY</span>
+      </button>
+    </div>
+
+    <!-- DETAIN (phone) -->
+    <div class="stamp-pad">
+      <button class="action-btn btn-detain" id="btn-detain" disabled>
+        <span class="btn-symbol">&#9650;</span>
+        <span class="btn-label">DETAIN</span>
+      </button>
+    </div>
+
+    <!-- FLAG marker -->
+    <div class="stamp-pad">
+      <button class="action-btn btn-flag" id="btn-flag" disabled>
+        <span class="btn-symbol">&#9873;</span>
+        <span class="btn-label">FLAG</span>
+      </button>
+    </div>
+
+    <!-- Utility: Rules & Settings -->
+    <button class="btn-util" onclick="window.showRulebook && window.showRulebook()" data-i18n="btn.rules">
+      &#9776; RULES
+    </button>
+    <button class="btn-util" onclick="window.showSettingsModal && window.showSettingsModal()" data-i18n="btn.settings">
+      &#9881; SETTINGS
+    </button>
+
+    <span id="action-info" data-i18n="action.noPassenger">No active passenger</span>
+
+  </div><!-- /action-bar -->
+
+  <!-- ── MODAL (inside #app so it scales with game) ── -->
+  <div id="modal-overlay">
+    <div id="modal-box">
+      <div id="modal-title"></div>
+      <div id="modal-body"></div>
+      <div id="modal-actions"></div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+</div><!-- /game-wrap -->
+
+<!-- ─────────────────────────────────────────────────────
+     SCRIPTS
+───────────────────────────────────────────────────── -->
+<script src="lang.js"></script>
+<script src="game.js"></script>
+<script src="story.js"></script>
+<script src="ui.js"></script>
+<script src="settings.js"></script>
+
+<script>
+/* ════════════════════════════════════════════════════
+   1. LETTERBOX SCALING
+════════════════════════════════════════════════════ */
+(function() {
+  'use strict';
+  const app  = document.getElementById('app');
+  const wrap = document.getElementById('game-wrap');
+
+  function fitToScreen() {
+    const sw = wrap.clientWidth;
+    const sh = wrap.clientHeight;
+    const scale = Math.min(sw / 1280, sh / 720);
+    app.style.transform = 'scale(' + scale + ')';
+  }
+
+  window.addEventListener('resize', fitToScreen);
+  fitToScreen();
+})();
+
+/* ════════════════════════════════════════════════════
+   2. DRAG & DROP — physical document on desk
+════════════════════════════════════════════════════ */
+(function() {
+  'use strict';
+  const doc = document.getElementById('doc-content');
+  if (!doc) return;
+
+  let dragging    = false;
+  let startX      = 0, startY = 0;
+  let baseX       = 0, baseY  = 0;
+  let currentX    = 0, currentY = 0;
+  let currentRot  = -0.8;
+
+  function applyTransform(x, y, rot, scale) {
+    scale = scale || 1;
+    doc.style.transform =
+      'translate(' + x + 'px, ' + y + 'px) rotate(' + rot + 'deg) scale(' + scale + ')';
+  }
+
+  /* Expose position reset (called on new passenger) */
+  window.resetDocPosition = function(rotDeg) {
+    currentRot = (rotDeg !== undefined) ? rotDeg : (Math.random() * 4 - 2);
+    currentX   = 0;
+    currentY   = 0;
+    doc.style.transition = 'transform 0.22s ease, box-shadow 0.22s ease';
+    applyTransform(0, 0, currentRot, 1);
+    doc.style.boxShadow = '';
+  };
+
+  doc.addEventListener('mousedown', function(e) {
+    if (e.target.closest('.doc-tab, button, a, input, select')) return;
+    dragging = true;
+    startX   = e.clientX;
+    startY   = e.clientY;
+    baseX    = currentX;
+    baseY    = currentY;
+
+    doc.style.transition = 'none';
+    doc.style.cursor     = 'grabbing';
+    doc.classList.add('dragging');
+    applyTransform(currentX, currentY, currentRot + 1.2, 1.03);
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    /* Scale mouse delta to match game scaling */
+    const wrap  = document.getElementById('game-wrap');
+    const scale = Math.min(wrap.clientWidth / 1280, wrap.clientHeight / 720);
+    const dx    = (e.clientX - startX) / scale;
+    const dy    = (e.clientY - startY) / scale;
+    currentX    = baseX + dx;
+    currentY    = baseY + dy;
+    applyTransform(currentX, currentY, currentRot + 1.2, 1.03);
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (!dragging) return;
+    dragging = false;
+    doc.style.cursor = 'grab';
+    doc.classList.remove('dragging');
+    /* Bounce-settle */
+    doc.style.transition = 'transform 0.28s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease';
+    applyTransform(currentX, currentY, currentRot, 1);
+  });
+
+  /* Touch support (basic) */
+  doc.addEventListener('touchstart', function(e) {
+    const t = e.touches[0];
+    dragging = true; startX = t.clientX; startY = t.clientY; baseX = currentX; baseY = currentY;
+    doc.style.transition = 'none';
+    doc.classList.add('dragging');
+    e.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!dragging) return;
+    const t  = e.touches[0];
+    const wrap  = document.getElementById('game-wrap');
+    const scale = Math.min(wrap.clientWidth / 1280, wrap.clientHeight / 720);
+    currentX = baseX + (t.clientX - startX) / scale;
+    currentY = baseY + (t.clientY - startY) / scale;
+    applyTransform(currentX, currentY, currentRot + 1.2, 1.03);
+  }, { passive: true });
+
+  document.addEventListener('touchend', function() {
+    if (!dragging) return;
+    dragging = false;
+    doc.classList.remove('dragging');
+    doc.style.transition = 'transform 0.28s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease';
+    applyTransform(currentX, currentY, currentRot, 1);
+  });
+
+  /* Auto-reset position when ui.js writes a new document */
+  const observer = new MutationObserver(function(mutations) {
+    /* Ignore mutations caused by our own ink-stamp appends */
+    const isOnlyStamps = mutations.every(function(m) {
+      return Array.from(m.addedNodes).every(function(n) {
+        return n.classList && n.classList.contains('ink-stamp');
+      });
+    });
+    if (!isOnlyStamps && window.resetDocPosition) {
+      window.resetDocPosition(Math.random() * 4 - 2);
+    }
+  });
+  observer.observe(doc, { childList: true });
+
+  /* Init */
+  window.resetDocPosition(-0.8);
+})();
+
+/* ════════════════════════════════════════════════════
+   3. STAMP ANIMATION
+   Intercepts stamp-button clicks (capture phase)
+   to play press animation + ink mark on document.
+════════════════════════════════════════════════════ */
+(function() {
+  'use strict';
+
+  var stampsConfig = [
+    { id: 'btn-approve', label: 'APPROVED', cls: 'approve' },
+    { id: 'btn-deny',    label: 'DENIED',   cls: 'deny'    },
+    { id: 'btn-detain',  label: 'DETAIN',   cls: 'detain'  },
+    { id: 'btn-flag',    label: 'FLAGGED',  cls: 'deny'    },
+  ];
+
+  stampsConfig.forEach(function(cfg) {
+    var btn = document.getElementById(cfg.id);
+    if (!btn) return;
+
+    btn.addEventListener('click', function() {
+      if (btn.disabled) return;
+
+      /* Press animation on the stamp button */
+      btn.classList.remove('stamp-pressing');
+      void btn.offsetWidth; /* reflow to restart animation */
+      btn.classList.add('stamp-pressing');
+      btn.addEventListener('animationend', function handler() {
+        btn.classList.remove('stamp-pressing');
+        btn.removeEventListener('animationend', handler);
+      });
+
+      /* Ink stamp on the document */
+      var doc = document.getElementById('doc-content');
+      if (doc) {
+        /* Remove previous stamps */
+        doc.querySelectorAll('.ink-stamp').forEach(function(s) { s.remove(); });
+
+        var ink       = document.createElement('div');
+        ink.className = 'ink-stamp ' + cfg.cls;
+        ink.textContent = cfg.label;
+
+        /* Randomise position slightly */
+        var topPx   = (28 + Math.random() * 24) + 'px';
+        var rightPx = (10 + Math.random() * 14) + 'px';
+        ink.style.top   = topPx;
+        ink.style.right = rightPx;
+
+        doc.appendChild(ink);
+      }
+    }, true); /* capture: fires before ui.js bubble listener */
+  });
+})();
+
+/* ════════════════════════════════════════════════════
+   4. ELECTRON DETECTION
+════════════════════════════════════════════════════ */
+(function() {
+  if (window.electronAPI && window.electronAPI.isElectron) {
+    document.body.classList.add('electron');
+  }
+})();
+</script>
+
+</body>
+</html>
