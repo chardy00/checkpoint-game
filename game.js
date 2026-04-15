@@ -240,14 +240,17 @@ function generatePassenger(dayState) {
       i18n: { key: 'anomaly.no_passport' } });
   } else if (Math.random() < errorChance) {
     const errorType = pickWeighted([
-      { v: 'expired_passport',      w: 0.15 },
-      { v: 'chip_mismatch',         w: 0.20 },
-      { v: 'face_mismatch',         w: 0.15 },
-      { v: 'missing_visa',          w: 0.15 },
-      { v: 'expired_visa',          w: 0.10 },
-      { v: 'watchlist_hit',         w: 0.10 },
-      { v: 'ees_overstay',          w: 0.10 },
+      { v: 'expired_passport',      w: 0.13 },
+      { v: 'chip_mismatch',         w: 0.17 },
+      { v: 'face_mismatch',         w: 0.13 },
+      { v: 'missing_visa',          w: 0.13 },
+      { v: 'expired_visa',          w: 0.09 },
+      { v: 'watchlist_hit',         w: 0.09 },
+      { v: 'ees_overstay',          w: 0.09 },
       { v: 'boarding_name_mismatch',w: 0.05 },
+      // Phase 4 new anomaly types
+      { v: 'contraband',            w: 0.07 },
+      { v: 'student_wrong_visa',    w: 0.06 },
     ]);
 
     applyAnomaly(errorType, { firstName, lastName, nation, expiry, visa, biometrics, dbChecks, boardingPass, anomalies, passNo, dayState });
@@ -376,6 +379,21 @@ function applyAnomaly(type, ctx) {
       anomalies.push({ type, severity: 'medium', desc: 'Boarding pass name does not match passport', i18n: { key:'anomaly.boarding_name_mismatch' } });
       break;
     }
+
+    // ── PHASE 4: NEW EVENT ANOMALY TYPES ──────────────────────
+    case 'contraband':
+      dbChecks.national = 'CUSTOMS FLAG — UNDECLARED GOODS';
+      anomalies.push({ type, severity: 'high', desc: 'Customs database flags undeclared contraband — refer to secondary inspection',
+        i18n: { key: 'anomaly.contraband' } });
+      break;
+
+    case 'student_wrong_visa': {
+      const wrongType = (visa && visa.type) || 'Type-C (Short Stay)';
+      if (visa) visa.purpose = 'Tourism';
+      anomalies.push({ type, severity: 'high', desc: `Student visa required — presented ${wrongType} (Tourism purpose declared)`,
+        i18n: { key: 'anomaly.student_wrong_visa' } });
+      break;
+    }
   }
 }
 
@@ -398,12 +416,17 @@ function pickBehavior(anomalies) {
 
 function pickMicroEvent(anomalies, dayState) {
   if (dayState.day < 2) return null;
-  if (Math.random() > 0.25) return null;
+  if (Math.random() > 0.30) return null;
   const events = [
     { type: 'bribe_offer',         amount: rand(50,200) },
     { type: 'diplomatic_immunity' },
     { type: 'lost_boarding_pass' },
     { type: 'nickname_mismatch' },
+    // Phase 4 new event types
+    { type: 'crying_family',       member: pick(['spouse','child','parent','sibling']) },
+    { type: 'diplomatic_courier',  country: pick(['DEU','FRA','GRC','NLD']) },
+    { type: 'medical_emergency',   condition: pick(['chest pain','severe allergic reaction','diabetic episode']) },
+    { type: 'returning_citizen' },
   ];
   // Visibly ill only triggers if anomalies present and health alert active
   if (anomalies.length > 0 && dayState.day >= 3) {

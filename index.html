@@ -1284,6 +1284,111 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(180,100,40,0.3); border-radius: 2px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(180,100,40,0.5); }
+
+    /* ═══════════════════════════════════════════════════════
+       DAY TRANSITION OVERLAY
+    ═══════════════════════════════════════════════════════ */
+    #day-transition {
+      position: absolute;
+      inset: 0;
+      z-index: 17000;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    #day-transition.active { opacity: 1; pointer-events: all; }
+    #day-transition .dt-label {
+      font-family: var(--font-pixel);
+      font-size: 8px;
+      letter-spacing: 4px;
+      color: #5a3820;
+      text-transform: uppercase;
+    }
+    #day-transition .dt-num {
+      font-family: var(--font-pixel);
+      font-size: 40px;
+      letter-spacing: 8px;
+      color: #c8a060;
+      text-shadow: 0 0 40px rgba(200,160,80,0.4);
+    }
+    @keyframes dt-num-in {
+      0%   { opacity: 0; transform: scale(0.6); }
+      60%  { opacity: 1; transform: scale(1.06); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    #day-transition.active .dt-num { animation: dt-num-in 0.5s ease-out forwards; }
+
+    /* ═══════════════════════════════════════════════════════
+       DECISION FEEDBACK FLASH
+    ═══════════════════════════════════════════════════════ */
+    #decision-flash {
+      position: absolute;
+      inset: 0;
+      z-index: 15900;
+      pointer-events: none;
+      opacity: 0;
+    }
+    @keyframes flash-approve { 0%{opacity:0.18} 100%{opacity:0} }
+    @keyframes flash-deny    { 0%{opacity:0.22} 100%{opacity:0} }
+    #decision-flash.flash-approve { background: rgba(0,255,136,0.25); animation: flash-approve 0.45s ease forwards; }
+    #decision-flash.flash-deny    { background: rgba(255,51,85,0.25);  animation: flash-deny    0.45s ease forwards; }
+
+    /* ═══════════════════════════════════════════════════════
+       DESK DECORATIONS
+    ═══════════════════════════════════════════════════════ */
+    /* Lamp glow in upper-left of doc area */
+    #desk-lamp-glow {
+      position: absolute;
+      top: 0; left: 0;
+      width: 340px; height: 200px;
+      background: radial-gradient(ellipse at 20% 0%, rgba(255,200,80,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+    /* Coffee cup — bottom right corner of desk */
+    #desk-coffee {
+      position: absolute;
+      bottom: 82px;
+      right: 290px;
+      width: 22px; height: 24px;
+      z-index: 5;
+      pointer-events: none;
+    }
+    #desk-coffee::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 3px;
+      width: 16px; height: 18px;
+      background: linear-gradient(180deg, #2a1808 0%, #1a0e04 100%);
+      border: 1px solid rgba(180,100,40,0.4);
+      border-radius: 1px 1px 3px 3px;
+    }
+    #desk-coffee::after {
+      content: '';
+      position: absolute;
+      bottom: 4px; right: 0;
+      width: 6px; height: 10px;
+      border: 1px solid rgba(180,100,40,0.35);
+      border-left: none;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* Feature notification */
+    #feature-notif {
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease;
+    }
+
+    /* Intro map pulse */
+    @keyframes pulse-map {
+      0%,100% { transform:scale(1);   opacity:1; }
+      50%      { transform:scale(1.6); opacity:0.6; }
+    }
   </style>
 </head>
 <body>
@@ -1398,7 +1503,7 @@
           </div>
           <div class="moral-row">
             <div class="moral-labels">
-              <span>LOYALTY</span>
+              <span data-i18n="moral.loyalty">LOYALTY</span>
               <span id="moral-loyalty-val">0</span>
             </div>
             <div class="moral-bar-track">
@@ -1407,7 +1512,7 @@
           </div>
           <div class="moral-row">
             <div class="moral-labels">
-              <span>CORRUPTION</span>
+              <span data-i18n="moral.corruption">CORRUPTION</span>
               <span id="moral-corruption-val">0</span>
             </div>
             <div class="moral-bar-track">
@@ -1568,6 +1673,52 @@
     </div>
   </div>
 
+  <!-- ── DAY TRANSITION OVERLAY ─────────────────────── -->
+  <div id="day-transition">
+    <div class="dt-label" data-i18n="day.label">GÜN</div>
+    <div class="dt-num" id="dt-day-num">1</div>
+  </div>
+
+  <!-- ── DECISION FEEDBACK FLASH ────────────────────── -->
+  <div id="decision-flash"></div>
+
+  <!-- ── DESK DECORATIONS ───────────────────────────── -->
+  <div id="desk-lamp-glow"></div>
+  <div id="desk-coffee"></div>
+
+  <!-- ── FEATURE NOTIFICATION (slide-in from top) ───── -->
+  <div id="feature-notif" style="position:absolute;top:0;left:50%;transform:translateX(-50%) translateY(-100%);
+    z-index:18000;background:rgba(0,0,0,0.92);border:1px solid var(--accent);
+    padding:10px 20px;font-family:var(--font-pixel);font-size:7px;color:var(--accent);
+    letter-spacing:1px;text-align:center;min-width:320px;opacity:0;pointer-events:none;
+    transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease;">
+  </div>
+
+  <!-- ── TUTORIAL OVERLAY ───────────────────────────── -->
+  <div id="tutorial-overlay" style="display:none;position:absolute;inset:0;z-index:19000;pointer-events:none;">
+    <div id="tutorial-spotlight"></div>
+    <div id="tutorial-tooltip" style="position:absolute;background:rgba(0,0,0,0.95);border:1px solid var(--accent);
+      padding:12px 16px;font-family:var(--font-mono);font-size:10px;color:var(--text);
+      max-width:260px;line-height:1.6;pointer-events:all;z-index:19001;">
+      <div id="tutorial-text"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end">
+        <button id="tutorial-skip" style="background:transparent;border:1px solid rgba(255,255,255,0.2);
+          color:rgba(255,255,255,0.4);font-family:var(--font-pixel);font-size:6px;padding:4px 8px;cursor:pointer;">
+          ATLA
+        </button>
+        <button id="tutorial-next" style="background:var(--accent);border:none;
+          color:#000;font-family:var(--font-pixel);font-size:6px;padding:4px 10px;cursor:pointer;">
+          TAMAM
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── INTRO OVERLAY ──────────────────────────────── -->
+  <div id="intro-overlay" style="display:none;position:absolute;inset:0;z-index:20000;
+    background:#000;align-items:center;justify-content:center;flex-direction:column;">
+  </div>
+
 </div><!-- /app -->
 </div><!-- /game-wrap -->
 
@@ -1577,6 +1728,9 @@
 <script src="lang.js"></script>
 <script src="game.js"></script>
 <script src="story.js"></script>
+<script src="tutorial.js"></script>
+<script src="features.js"></script>
+<script src="intro.js"></script>
 <script src="ui.js"></script>
 <script src="settings.js"></script>
 

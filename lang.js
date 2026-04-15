@@ -339,6 +339,14 @@ const LANG_EN = {
   'micro.nicknameMismatch':'Name on boarding pass appears to be a nickname or abbreviated form.',
   'micro.visiblyIll':      'Passenger appears unwell. Coughing. Flushed skin.',
   'micro.cryingChild':     'Passenger has a young child. Child is distressed. Passenger begs entry.',
+  'micro.cryingFamily':    'Passenger is visibly distraught. Crying. Claims family emergency on the other side.',
+  'micro.diplomaticCourier': 'Passenger presents diplomatic courier credentials — sealed pouch, not subject to inspection.',
+  'micro.medicalEmergency':  'Passenger collapses at the window. Requires immediate medical attention.',
+  'micro.returningCitizen':  'Passenger is a returning national. Emotional. Has been abroad for several years.',
+
+  // Anomaly: Phase 4
+  'anomaly.contraband':         'Customs flag: undeclared goods — refer to secondary inspection.',
+  'anomaly.student_wrong_visa': 'Student declared purpose — visa type does not match.',
 
   // ANIMUS
   'animus.tab':            '◈ ANİMUS',
@@ -358,6 +366,9 @@ const LANG_EN = {
   'event.terror_warning':   'TERROR WARNING',
   'event.phantom_message':  'PHANTOM MESSAGE',
   'event.consequence':      'CONSEQUENCE',
+
+  // Day transition overlay
+  'day.label':              'DAY',
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -692,6 +703,14 @@ const LANG_TR = {
   'micro.nicknameMismatch':'Biniş kartındaki isim takma ad veya kısaltılmış görünüyor.',
   'micro.visiblyIll':      'Yolcu hasta görünüyor. Öksürüyor. Yüzü kızarmış.',
   'micro.cryingChild':     'Yolcunun küçük bir çocuğu var. Çocuk üzgün. Yolcu girişi yalvarıyor.',
+  'micro.cryingFamily':    'Yolcu görünür şekilde üzgün. Ağlıyor. Diğer tarafta aile acili olduğunu söylüyor.',
+  'micro.diplomaticCourier': 'Yolcu diplomatik kurye kimlik belgesi sunuyor — mühürlü çanta, denetime tabi değil.',
+  'micro.medicalEmergency':  'Yolcu pencerede yığılıyor. Acil tıbbi müdahale gerekiyor.',
+  'micro.returningCitizen':  'Yolcu dönen bir vatandaş. Duygusal. Yıllarca yurt dışında kalmış.',
+
+  // Anomaly: Phase 4
+  'anomaly.contraband':         'Gümrük uyarısı: beyan edilmemiş eşya — ikincil denetime sevk.',
+  'anomaly.student_wrong_visa': 'Öğrenci beyan edildi — vize türü eşleşmiyor.',
 
   // ANIMUS
   'animus.tab':            '◈ ANİMUS',
@@ -711,6 +730,9 @@ const LANG_TR = {
   'event.terror_warning':   'TEHDİT UYARISI',
   'event.phantom_message':  'HAYALET MESAJI',
   'event.consequence':      'SONUÇ',
+
+  // Day transition overlay
+  'day.label':              'GÜN',
 };
 
 // ─────────────────────────────────────────────────────────────

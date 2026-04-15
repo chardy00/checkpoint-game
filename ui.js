@@ -533,12 +533,17 @@ function renderFlags(p) {
   if (p.microEvent) {
     const T = window.t;
     const microMap = {
-      bribe_offer:        { cls:'warn',   key:'micro.bribeOffer'      },
-      diplomatic_immunity:{ cls:'warn',   key:'micro.diplomatic'      },
-      lost_boarding_pass: { cls:'info',   key:'micro.lostBoarding'    },
-      nickname_mismatch:  { cls:'info',   key:'micro.nicknameMismatch'},
-      visibly_ill:        { cls:'danger', key:'micro.visiblyIll'      },
-      crying_child:       { cls:'info',   key:'micro.cryingChild'     },
+      bribe_offer:         { cls:'warn',   key:'micro.bribeOffer'        },
+      diplomatic_immunity: { cls:'warn',   key:'micro.diplomatic'        },
+      lost_boarding_pass:  { cls:'info',   key:'micro.lostBoarding'      },
+      nickname_mismatch:   { cls:'info',   key:'micro.nicknameMismatch'  },
+      visibly_ill:         { cls:'danger', key:'micro.visiblyIll'        },
+      crying_child:        { cls:'info',   key:'micro.cryingChild'       },
+      // Phase 4 new events
+      crying_family:       { cls:'info',   key:'micro.cryingFamily'      },
+      diplomatic_courier:  { cls:'warn',   key:'micro.diplomaticCourier' },
+      medical_emergency:   { cls:'danger', key:'micro.medicalEmergency'  },
+      returning_citizen:   { cls:'info',   key:'micro.returningCitizen'  },
     };
     const m = microMap[p.microEvent.type];
     if (m) addNote(m.cls, T(m.key));
@@ -575,6 +580,16 @@ function handleDecision(decision) {
 
   disableButtons();
   if (decision === 'approve') soundApprove(); else soundDeny();
+
+  // Visual flash feedback
+  const flash = document.getElementById('decision-flash');
+  if (flash) {
+    flash.className = '';
+    void flash.offsetWidth; // reflow to restart animation
+    if (decision === 'approve') flash.className = 'flash-approve';
+    else if (decision === 'deny' || decision === 'detain') flash.className = 'flash-deny';
+  }
+
   const result = window.recordDecision(decision);
 
   // Story: record character decision
@@ -889,7 +904,14 @@ window.showDaySummary = function() {
       window.startDay();
       updateBulletinBoard();
       const dayEvent = window.getDayStartEvent ? window.getDayStartEvent(gs.day) : null;
-      showDayBulletin(gs.day, dayEvent, () => loadNextPassenger());
+      const nextDay = gs.day;
+      showDayBulletin(nextDay, dayEvent, () => {
+        if (window.checkFeatureUnlocks) {
+          window.checkFeatureUnlocks(nextDay, () => loadNextPassenger());
+        } else {
+          loadNextPassenger();
+        }
+      });
     }
   }]);
 
@@ -1554,7 +1576,13 @@ function init() {
     renderFamilyPanel();
     updateBulletinBoard();
     const evt = window.getDayStartEvent ? window.getDayStartEvent(1) : null;
-    showDayBulletin(1, evt, () => loadNextPassenger());
+    showDayBulletin(1, evt, () => {
+      if (window.runTutorialIfNeeded) {
+        window.runTutorialIfNeeded(() => loadNextPassenger());
+      } else {
+        loadNextPassenger();
+      }
+    });
   };
 
   const continueGame = () => {
@@ -1576,7 +1604,11 @@ function init() {
       ]
     : [{ label: T('init.begin'), action: startFresh, cls: 'btn-approve' }];
 
-  showModal(T('init.title'), body, actions);
+  if (window.runIntroIfNeeded) {
+    window.runIntroIfNeeded(() => showModal(T('init.title'), body, actions));
+  } else {
+    showModal(T('init.title'), body, actions);
+  }
 }
 
 init();
