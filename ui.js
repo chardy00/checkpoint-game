@@ -684,7 +684,7 @@ function renderFamilyPanel() {
       <div class="member-icon">${icons[m.id] || '◆'}</div>
       <div class="member-info">
         <div class="member-name">${m.name}</div>
-        <div class="member-relation">${m.relation}</div>
+        <div class="member-relation">${window.t('family.relation.' + m.relation.toLowerCase())}</div>
       </div>
       <div class="member-health ${hClass}">${label}</div>
     </div>`;
@@ -962,7 +962,7 @@ function showDayBulletin(day, storyEvent, onDone) {
   const ruleBlock = rules ? `
     <div style="background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.18);padding:12px 14px;margin-bottom:14px">
       <div style="font-size:9px;letter-spacing:2px;color:var(--accent);margin-bottom:7px">${T('modal.update', { day })}</div>
-      <div style="color:var(--text-bright);font-size:12px;line-height:1.9">${rules.label}</div>
+      <div style="color:var(--text-bright);font-size:12px;line-height:1.9">${(window._getLang && window._getLang()==='tr' && rules.label_tr) ? rules.label_tr : rules.label}</div>
       ${rules.bannedNations ? `<div style="margin-top:6px;color:var(--red);font-size:11px">${T('modal.bannedEntry', { nations: rules.bannedNations.join(', ') })}</div>` : ''}
       ${rules.terrorLevel  ? `<div style="margin-top:6px;color:var(--red);font-size:11px">${T('modal.threatElev')}</div>` : ''}
       ${rules.interpol === 'detain' ? `<div style="margin-top:6px;color:var(--orange);font-size:11px">${T('modal.interpolDetain')}</div>` : ''}
@@ -977,9 +977,9 @@ function showDayBulletin(day, storyEvent, onDone) {
     <div style="border-left:3px solid ${typeColors[storyEvent.type]||'var(--yellow)'};
                 padding:10px 14px;background:rgba(255,255,255,0.02);margin-bottom:10px">
       <div style="font-size:9px;letter-spacing:2px;color:var(--text-dim);margin-bottom:5px">
-        ${storyEvent.type==='phantom_message'?'&#9649; ':''} ${storyEvent.type.replace(/_/g,' ').toUpperCase()}
+        ${storyEvent.type==='phantom_message'?'&#9649; ':''} ${T('event.' + storyEvent.type) || storyEvent.type.replace(/_/g,' ').toUpperCase()}
       </div>
-      <div style="font-size:12px;line-height:1.9;color:var(--text)">${storyEvent.content}</div>
+      <div style="font-size:12px;line-height:1.9;color:var(--text)">${(window._getLang && window._getLang()==='tr' && storyEvent.content_tr) ? storyEvent.content_tr : storyEvent.content}</div>
     </div>` : '';
 
   const body = `
@@ -1327,9 +1327,9 @@ function showDayStartEvent(event, onDone) {
   const body = `
   <div style="font-family:var(--font-mono);font-size:12px;line-height:1.9;padding:4px 0">
     <div style="color:${color};letter-spacing:2px;font-size:10px;margin-bottom:12px;text-transform:uppercase">
-      ${event.type === 'phantom_message' ? '⬡ ' : ''}${event.type.replace(/_/g,' ')}
+      ${event.type === 'phantom_message' ? '⬡ ' : ''}${window.t('event.' + event.type) || event.type.replace(/_/g,' ')}
     </div>
-    <div style="color:var(--text);line-height:1.9">${event.content}</div>
+    <div style="color:var(--text);line-height:1.9">${(window._getLang && window._getLang()==='tr' && event.content_tr) ? event.content_tr : event.content}</div>
   </div>`;
 
   // Terror event — flash alert bar
@@ -1338,7 +1338,7 @@ function showDayStartEvent(event, onDone) {
     setTimeout(() => DOM.alertBar.classList.remove('show'), 8000);
   }
 
-  showModal(event.title, body, [
+  showModal((window._getLang && window._getLang()==='tr' && event.title_tr) ? event.title_tr : event.title, body, [
     { label: window.t('modal.ack'), action: () => { closeModal(); onDone(); } },
   ]);
 }

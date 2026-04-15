@@ -347,6 +347,17 @@ const LANG_EN = {
   // Queue badges
   'queue.ok':              'OK',
   'queue.err':             'ERR',
+
+  // Family relations
+  'family.relation.spouse': 'Spouse',
+  'family.relation.son':    'Son',
+
+  // Day bulletin event type labels
+  'event.bulletin':         'BULLETIN',
+  'event.news':             'NEWS',
+  'event.terror_warning':   'TERROR WARNING',
+  'event.phantom_message':  'PHANTOM MESSAGE',
+  'event.consequence':      'CONSEQUENCE',
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -371,8 +382,8 @@ const LANG_TR = {
   'panel.bulletin':        '■ Günün Bülteni',
   'panel.family':          'Aile',
   'panel.moral':           'Ahlaki Profil',
-  'moral.compassion':      'MERHAMETİ',
-  'moral.loyalty':         'SADAKATI',
+  'moral.compassion':      'MERHAMET',
+  'moral.loyalty':         'SADAKAT',
   'moral.corruption':      'YOLSUZLUK',
   'photo.noimg':           'FOTOĞRAF YOK',
   'queue.awaiting':        'Yolcu bekleniyor',
@@ -689,6 +700,17 @@ const LANG_TR = {
   // Queue badges
   'queue.ok':              'OK',
   'queue.err':             'HATA',
+
+  // Family relations
+  'family.relation.spouse': 'Eş',
+  'family.relation.son':    'Oğul',
+
+  // Day bulletin event type labels
+  'event.bulletin':         'BÜLTEN',
+  'event.news':             'HABER',
+  'event.terror_warning':   'TEHDİT UYARISI',
+  'event.phantom_message':  'HAYALET MESAJI',
+  'event.consequence':      'SONUÇ',
 };
 
 // ─────────────────────────────────────────────────────────────
