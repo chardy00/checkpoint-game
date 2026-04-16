@@ -448,7 +448,7 @@ function determineCorrectDecision(anomalies, nation, dayState) {
 
   // Interpol hit — day 12+ requires DETAIN, earlier requires DENY
   const watchlist = anomalies.find(a => a.type === 'watchlist_hit');
-  if (watchlist) return (rules && rules.interpol === 'detain') ? 'detain' : 'detain';
+  if (watchlist) return 'detain';
 
   // EES overstay — day 10+ requires DETAIN
   const overstay = anomalies.find(a => a.type === 'ees_overstay');

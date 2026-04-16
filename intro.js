@@ -189,8 +189,9 @@
     else if (screen.type === 'text')   html = buildText(screen);
 
     // Continue button
+    const T = window.t || (k => k);
     const isLast = (index === SCREENS.length - 1);
-    const btnLabel = isLast ? 'BAŞLA' : 'DEVAM';
+    const btnLabel = isLast ? T('intro.start') : T('intro.continue');
     const btnHtml = `
       <button id="intro-next-btn" style="margin-top:12px;background:transparent;
         border:1px solid rgba(0,212,255,0.5);color:rgba(0,212,255,0.8);
@@ -204,7 +205,7 @@
       <button id="intro-skip-btn" style="position:absolute;bottom:20px;right:20px;
         background:transparent;border:none;color:rgba(255,255,255,0.2);
         font-family:'Courier New',monospace;font-size:8px;letter-spacing:1px;cursor:pointer;">
-        ATLA
+        ${T('intro.skip')}
       </button>` : '';
 
     wrap.innerHTML = html + btnHtml;

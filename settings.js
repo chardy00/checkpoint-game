@@ -100,7 +100,8 @@ window._setFullscreen = function () {
 
 window._resetGame = function () {
   const T = window.t || function (k) { return k; };
-  if (!confirm('Reset all save progress? This cannot be undone.')) return;
+  const confirmMsg = (window.t && window.t('settings.confirmReset')) || 'Reset all save progress? This cannot be undone.';
+  if (!confirm(confirmMsg)) return;
   try { localStorage.removeItem('chk_save'); } catch (e) {}
   location.reload();
 };
@@ -219,9 +220,9 @@ window.showSettingsModal = function () {
 
   <!-- FULLSCREEN -->
   <div style="${ROW}">
-    <span style="${LBL}">FULLSCREEN</span>
+    <span style="${LBL}">${T('settings.fullscreen')}</span>
     <div style="${GRP}">
-      <button style="${BTN}" onclick="window._setFullscreen()">&#9645; Toggle Fullscreen</button>
+      <button style="${BTN}" onclick="window._setFullscreen()">&#9645; ${T('settings.toggleFs')}</button>
     </div>
   </div>
 
@@ -229,7 +230,7 @@ window.showSettingsModal = function () {
   <div style="${DIV}"></div>
   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
     <button style="${BTN};background:rgba(255,51,85,0.08);color:#c04050;border-color:rgba(255,51,85,0.3)"
-      onclick="window._resetGame()">&#9888; Reset Save</button>
+      onclick="window._resetGame()">&#9888; ${T('settings.resetSave')}</button>
     <button style="${BTN}" onclick="window._closeSettings()">${T('settings.close')}</button>
   </div>
 

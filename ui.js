@@ -1091,7 +1091,7 @@ function showCharacterDialogue(p) {
     : '';
 
   const seenBadge = timesSeen > 0
-    ? `<span style="display:inline-block;font-size:9px;letter-spacing:1px;padding:2px 7px;background:rgba(0,212,255,0.08);border:1px solid var(--accent-dim);color:var(--accent-dim);margin-bottom:8px">ENCOUNTERED ${timesSeen}×</span>`
+    ? `<span style="display:inline-block;font-size:9px;letter-spacing:1px;padding:2px 7px;background:rgba(0,212,255,0.08);border:1px solid var(--accent-dim);color:var(--accent-dim);margin-bottom:8px">${T('story.encountered', { n: timesSeen })}</span>`
     : '';
 
   const body = `
@@ -1215,8 +1215,8 @@ function showBribeModal(p) {
   <div style="font-family:var(--font-mono);font-size:12px">
     <div style="padding:12px 14px;background:rgba(255,204,0,0.05);border-left:3px solid var(--yellow);margin-bottom:14px;line-height:1.8">
       ${T('micro.bribeOffer')}<br>
-      He says nothing. He doesn't look at you.<br>
-      He waits.
+      ${T('bribe.silence')}<br>
+      ${T('bribe.waits')}
     </div>
     <div style="padding:10px;background:rgba(0,0,0,0.3);font-size:11px;color:var(--text-dim);margin-bottom:14px">
       <em style="color:var(--yellow)">"${p.envelopeContent}"</em>
@@ -1455,7 +1455,7 @@ window.showAnimusMessage = function(msg, onDone) {
   text.style.cssText = 'min-height:80px;white-space:pre-wrap;';
 
   const dismiss = document.createElement('div');
-  dismiss.textContent = '[ kapat / dismiss ]';
+  dismiss.textContent = (window.t && window.t('ui.dismiss')) || '[ dismiss ]';
   dismiss.style.cssText = 'margin-top:22px;font-size:10px;color:#204020;letter-spacing:2px;';
 
   box.appendChild(symbol);

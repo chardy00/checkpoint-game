@@ -369,6 +369,103 @@ const LANG_EN = {
 
   // Day transition overlay
   'day.label':              'DAY',
+
+  // Tutorial steps
+  'tutorial.step1.title': 'SABIHA GÖKÇEN AIRPORT — BORDER CONTROL',
+  'tutorial.step1.text':  'Welcome to your new post, Officer. You are responsible for verifying the identity of all passengers entering Turkey.',
+  'tutorial.step2.title': 'PASSENGER',
+  'tutorial.step2.text':  'Each passenger approaches the window. Pay attention to their expression and behavior — it may provide clues.',
+  'tutorial.step3.title': 'DOCUMENTS',
+  'tutorial.step3.text':  'Examine the passenger\'s documents. Passport, boarding pass and RFID chip data are in separate tabs.',
+  'tutorial.step4.title': 'BIOMETRIC SCAN',
+  'tutorial.step4.text':  'Biometric scan starts automatically. Wait for facial recognition, fingerprint and RFID results. Below 80% is suspicious.',
+  'tutorial.step5.title': 'DATABASE',
+  'tutorial.step5.text':  'Database checks cover Interpol, blacklist and visa validity. Any HIT requires careful attention.',
+  'tutorial.step6.title': 'DECISION',
+  'tutorial.step6.text':  'After reviewing documents, make your decision:\n• APPROVE — Documents valid\n• DENY — Missing or invalid documents\n• DETAIN — Security threat\n• FLAG — Further inspection needed',
+  'tutorial.step7.title': 'SHIFT BEGINS',
+  'tutorial.step7.text':  'Your first passenger is approaching. Today only Turkish citizens are permitted entry.',
+  'tutorial.btn.next':    'NEXT →',
+  'tutorial.btn.skip':    'SKIP',
+  'tutorial.btn.start':   'BEGIN SHIFT →',
+
+  // Behavior descriptions (extended set)
+  'behavior.calm':        'Calm. Routine traveler.',
+  'behavior.nervous':     'Nervous. Keeps looking left.',
+  'behavior.suspicious':  'Suspicious. Vague answers to questions.',
+  'behavior.tired':       'Tired. Long-haul flight.',
+  'behavior.confident':   'Confident. Rushing you to stamp quickly.',
+  'behavior.emotional':   'Emotional. On the verge of tears.',
+  'behavior.aggressive':  'Aggressive. Raising voice.',
+  'behavior.diplomatic':  'Diplomatic. Formal demeanor.',
+
+  // Feature unlock notifications
+  'feature.unlockTitle':       'NEW FEATURE UNLOCKED',
+  'feature.visa.body':         'VISA CHECK active. Foreign nationals now require a valid entry visa.',
+  'feature.biometric.body':    'BIOMETRIC SCAN active. Verify face and fingerprint match.',
+  'feature.rfid.body':         'RFID CHIP READ active. Chip data must match passport fields.',
+  'feature.interpol.body':     'INTERPOL DATABASE active. Blacklist queries now available.',
+  'feature.ees.body':          'EES ENTRY/EXIT active. Travel history can now be verified.',
+  'feature.warning14.title':   'WARNING',
+  'feature.warning14.body':    'Intelligence: forged document operation detected at border. Exercise caution.',
+  'feature.final.title':       'FINAL DAYS APPROACHING',
+  'feature.final.body':        'You have entered the final phase. The weight of your decisions will be felt.',
+
+  // Intro sequence buttons
+  'intro.start':    'BEGIN',
+  'intro.continue': 'CONTINUE',
+  'intro.skip':     'SKIP',
+
+  // Settings confirm / extra
+  'settings.confirmReset':  'Reset all save progress? This cannot be undone.',
+  'settings.fullscreen':    'FULLSCREEN',
+  'settings.toggleFs':      'Toggle Fullscreen',
+  'settings.resetSave':     'Reset Save',
+
+  // UI dismiss / bribe lines
+  'ui.dismiss':       '[ dismiss ]',
+  'bribe.silence':    'He says nothing. He doesn\'t look at you.',
+  'bribe.waits':      'He waits.',
+
+  // Wanted bulletin
+  'wanted.bulletin':         'WANTED PERSON BULLETIN',
+  'wanted.name':             'Name',
+  'wanted.nationality':      'Nationality',
+  'wanted.crime':            'Crime',
+  'wanted.description':      'Description',
+  'wanted.crimes.drugs':     'Drug trafficking',
+  'wanted.crimes.forgery':   'Document forgery',
+  'wanted.crimes.terror':    'Terrorism',
+  'wanted.crimes.fraud':     'Fraud',
+  'wanted.crimes.smuggling': 'Human trafficking',
+
+  // Ending titles
+  'ending.modelOfficer.title':     'Model Officer',
+  'ending.informant.title':        'The Informant',
+  'ending.arrested.title':         'Arrested',
+  'ending.humanitarian.title':     'The Humanitarian',
+  'ending.escape.title':           'The Escape',
+  'ending.forgotten.title':        'The Forgotten',
+  'ending.animusAligned.title':    'Instinct',
+  'ending.animusRejected.title':   'Silence',
+  'ending.animusManipulated.title':'Tool',
+
+  // Rules — day narrative summaries (used by bulletin + timeline)
+  'rules.day1':  'Turkish citizens only. Valid Turkish passport required.',
+  'rules.day2':  'All nations open. Foreigners require valid visa. EES now active.',
+  'rules.day3':  'Chip required. German passengers from Bavaria: health declaration required.',
+  'rules.day4':  'RFID chip verification mandatory. Corrupt chip: deny.',
+  'rules.day5':  'Boarding pass required. Refer all alerts to secondary.',
+  'rules.day6':  'Ukraine e-visa required. Syria: visa + humanitarian permit mandatory.',
+  'rules.day7':  'EU diplomatic passports receive expedited processing.',
+  'rules.day8':  'SECURITY LEVEL ELEVATED. All Interpol alerts require maximum attention.',
+  'rules.day9':  'Ukraine nationals: additional screening, refer to secondary.',
+  'rules.day10': 'X-RAY scanner active. EES overstay: detain (not deny).',
+  'rules.day11': 'Italian flight delays. Verify boarding pass dates carefully.',
+  'rules.day12': 'Diplomatic pouches exempt. Passport series FR-88XX: flag.',
+  'rules.day13': 'Syrian passports: deny until further notice.',
+  'rules.day14': 'Health declaration for German passengers lifted.',
+  'rules.day15': 'ANIMUS final message. All systems at full capacity.',
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -733,6 +830,103 @@ const LANG_TR = {
 
   // Day transition overlay
   'day.label':              'GÜN',
+
+  // Tutorial steps
+  'tutorial.step1.title': 'SABİHA GÖKÇEN HAVALİMANI — SINIR KONTROL NOKTASI',
+  'tutorial.step1.text':  'Yeni görevinize hoş geldiniz, Memur. Türkiye\'ye giriş yapan tüm yolcuların kimliklerini doğrulamak sizin sorumluluğunuzdadır.',
+  'tutorial.step2.title': 'YOLCU',
+  'tutorial.step2.text':  'Her yolcu pencereden yaklaşır. Yüz ifadesine ve davranışına dikkat edin — ipuçları verebilir.',
+  'tutorial.step3.title': 'BELGELER',
+  'tutorial.step3.text':  'Yolcunun belgelerini inceleyin. Pasaport, biniş kartı ve RFID çip verileri ayrı sekmelerde yer alır.',
+  'tutorial.step4.title': 'BİYOMETRİK TARAMA',
+  'tutorial.step4.text':  'Biyometrik tarama otomatik başlar. Yüz tanıma, parmak izi ve RFID sonuçlarını bekleyin. %80 altı şüphelidir.',
+  'tutorial.step5.title': 'VERİTABANI',
+  'tutorial.step5.text':  'Veritabanı sorguları Interpol, kara liste ve vize geçerliliğini kontrol eder. UYARI görürseniz dikkatli olun.',
+  'tutorial.step6.title': 'KARAR',
+  'tutorial.step6.text':  'Belgeleri inceledikten sonra kararınızı verin:\n• ONAYLA — Belgeler geçerli\n• REDDET — Belge eksik veya geçersiz\n• GÖZALTI — Güvenlik tehdidi\n• İŞARETLE — Daha fazla inceleme',
+  'tutorial.step7.title': 'VARDİYA BAŞLIYOR',
+  'tutorial.step7.text':  'İlk yolcunuz geliyor. Bugün yalnızca Türk vatandaşları kabul edilmektedir.',
+  'tutorial.btn.next':    'DEVAM →',
+  'tutorial.btn.skip':    'ATLA',
+  'tutorial.btn.start':   'VARDİYAYA BAŞLA →',
+
+  // Behavior descriptions (extended set)
+  'behavior.calm':        'Sakin. Rutin yolcu.',
+  'behavior.nervous':     'Gergin. Sürekli sola bakıyor.',
+  'behavior.suspicious':  'Şüpheli. Sorulara muğlak cevap veriyor.',
+  'behavior.tired':       'Yorgun. Uzun mesafeli uçuş.',
+  'behavior.confident':   'Özgüvenli. Hızlı işlem istiyor.',
+  'behavior.emotional':   'Duygusal. Ağlama noktasında.',
+  'behavior.aggressive':  'Agresif. Sesini yükseltiyor.',
+  'behavior.diplomatic':  'Diplomatik. Resmi tavır.',
+
+  // Feature unlock notifications
+  'feature.unlockTitle':       'YENİ ÖZELLİK AÇILDI',
+  'feature.visa.body':         'VİZE KONTROLÜ aktif. Yabancı uyruklu yolcular artık geçerli giriş vizesi gerektiriyor.',
+  'feature.biometric.body':    'BİYOMETRİK TARAMA aktif. Yüz ve parmak izi eşleşmesini doğrulayın.',
+  'feature.rfid.body':         'RFID ÇİP OKUMA aktif. Çip verisi pasaport alanlarıyla eşleşmeli.',
+  'feature.interpol.body':     'INTERPOL VERİTABANI aktif. Kara liste sorgusu artık mümkün.',
+  'feature.ees.body':          'EES GİRİŞ/ÇIKIŞ aktif. Seyahat geçmişi artık doğrulanabilir.',
+  'feature.warning14.title':   'UYARI',
+  'feature.warning14.body':    'İstihbarat: Sınırda sahte belge operasyonu saptandı. Dikkatli olun.',
+  'feature.final.title':       'SON GÜN YAKLAŞIYOR',
+  'feature.final.body':        'Bitiş aşamasına girdiniz. Kararlarınızın ağırlığını hissedeceksiniz.',
+
+  // Intro sequence buttons
+  'intro.start':    'BAŞLA',
+  'intro.continue': 'DEVAM',
+  'intro.skip':     'ATLA',
+
+  // Settings confirm / extra
+  'settings.confirmReset':  'Tüm kayıt verisi silinsin mi? Bu işlem geri alınamaz.',
+  'settings.fullscreen':    'TAM EKRAN',
+  'settings.toggleFs':      'Tam Ekranı Aç/Kapat',
+  'settings.resetSave':     'Kayıdı Sıfırla',
+
+  // UI dismiss / bribe lines
+  'ui.dismiss':       '[ kapat ]',
+  'bribe.silence':    'Hiçbir şey söylemiyor. Sizi görmezden geliyor.',
+  'bribe.waits':      'Bekliyor.',
+
+  // Wanted bulletin
+  'wanted.bulletin':         'ARANAN KİŞİ BÜLTENİ',
+  'wanted.name':             'Ad Soyad',
+  'wanted.nationality':      'Uyruk',
+  'wanted.crime':            'Suç',
+  'wanted.description':      'Açıklama',
+  'wanted.crimes.drugs':     'Uyuşturucu kaçakçılığı',
+  'wanted.crimes.forgery':   'Sahte belge üretimi',
+  'wanted.crimes.terror':    'Terör örgütü üyeliği',
+  'wanted.crimes.fraud':     'Dolandırıcılık',
+  'wanted.crimes.smuggling': 'İnsan kaçakçılığı',
+
+  // Ending titles
+  'ending.modelOfficer.title':     'Model Memur',
+  'ending.informant.title':        'İhbarcı',
+  'ending.arrested.title':         'Tutuklama',
+  'ending.humanitarian.title':     'İnsancıl',
+  'ending.escape.title':           'Kaçış',
+  'ending.forgotten.title':        'Unutulan',
+  'ending.animusAligned.title':    'İçgüdü',
+  'ending.animusRejected.title':   'Sessizlik',
+  'ending.animusManipulated.title':'Araç',
+
+  // Rules — day narrative summaries
+  'rules.day1':  'Yalnızca Türk vatandaşları. Geçerli Türk pasaportu zorunludur.',
+  'rules.day2':  'Tüm uluslar açık. Yabancılar geçerli vize gerektiriyor. EES sistemi aktif.',
+  'rules.day3':  'Çip zorunludur. Bavyera\'dan Alman yolcular: sağlık beyanı gereklidir.',
+  'rules.day4':  'RFID çip doğrulaması zorunludur. Bozuk çip: reddet.',
+  'rules.day5':  'Biniş kartı zorunludur. Tüm uyarılar ikincil kontrole yönlendir.',
+  'rules.day6':  'Ukrayna e-vizesi zorunludur. Suriye: vize + insani izin şart.',
+  'rules.day7':  'AB diplomatik pasaportları hızlandırılmış işlem alır.',
+  'rules.day8':  'GÜVENLİK SEVİYESİ YÜKSELTİLDİ. Tüm Interpol uyarıları azami dikkat gerektirir.',
+  'rules.day9':  'Ukrayna uyrukluları: ek tarama zorunlu, ikincil kontrole yönlendir.',
+  'rules.day10': 'X-RAY tarayıcı aktif. EES fazla kalış: gözaltı (red değil).',
+  'rules.day11': 'İtalya uçuşlarında gecikmeler. Biniş kartı tarihlerini dikkatli doğrulayın.',
+  'rules.day12': 'Diplomatik kurye çantaları muaftır. FR-88XX serisi pasaportlar: işaretle.',
+  'rules.day13': 'Suriye pasaportları: ikinci emre kadar reddet.',
+  'rules.day14': 'Alman yolcular için sağlık beyanı zorunluluğu kaldırıldı.',
+  'rules.day15': 'ANIMUS son mesajı. Tüm sistemler tam kapasitede.',
 };
 
 // ─────────────────────────────────────────────────────────────
