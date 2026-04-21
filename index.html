@@ -1389,6 +1389,149 @@
       0%,100% { transform:scale(1);   opacity:1; }
       50%      { transform:scale(1.6); opacity:0.6; }
     }
+
+    /* ═══════════════════════════════════════════════════════
+       ADIM 13 — ENHANCED ANIMATIONS
+    ═══════════════════════════════════════════════════════ */
+
+    /* ── Modal fade + scale ──────────────────────────────── */
+    #modal-overlay {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
+      display: flex !important;   /* always flex; visibility toggled via opacity */
+    }
+    #modal-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+    #modal-box {
+      transform: rotate(-0.25deg) scale(0.93);
+      transition: transform 0.22s cubic-bezier(0.34,1.46,0.64,1);
+    }
+    #modal-overlay.show #modal-box {
+      transform: rotate(-0.25deg) scale(1);
+    }
+
+    /* ── Note items slide in ─────────────────────────────── */
+    @keyframes note-in {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .note-item {
+      animation: note-in 0.18s ease forwards;
+    }
+
+    /* ── Streak pulse on 3+ ──────────────────────────────── */
+    @keyframes streak-pulse {
+      0%,100% { text-shadow: none; }
+      50%     { text-shadow: 0 0 8px var(--yellow), 0 0 16px rgba(255,200,0,0.4); }
+    }
+    #streak-display.active {
+      animation: streak-pulse 1.4s ease-in-out infinite;
+    }
+
+    /* ── Button ripple ───────────────────────────────────── */
+    @keyframes btn-ripple {
+      from { transform: scale(0); opacity: 0.4; }
+      to   { transform: scale(3.5); opacity: 0; }
+    }
+    .btn-ripple {
+      position: absolute;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      pointer-events: none;
+      transform: scale(0);
+      animation: btn-ripple 0.5s ease-out forwards;
+    }
+    .action-btn { overflow: hidden; position: relative; }
+
+    /* ── Queue item slide ────────────────────────────────── */
+    @keyframes queue-item-in {
+      from { opacity: 0; transform: translateX(-6px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .queue-item {
+      animation: queue-item-in 0.15s ease forwards;
+    }
+
+    /* ── Coffee steam ────────────────────────────────────── */
+    @keyframes steam-rise {
+      0%   { opacity: 0;   transform: translateY(0)   scaleX(1); }
+      40%  { opacity: 0.4; transform: translateY(-6px) scaleX(1.2); }
+      100% { opacity: 0;   transform: translateY(-14px) scaleX(0.7); }
+    }
+    #desk-coffee-steam {
+      position: absolute;
+      bottom: 100%;
+      left: 7px;
+      display: flex;
+      gap: 4px;
+    }
+    #desk-coffee-steam span {
+      width: 2px; height: 8px;
+      background: rgba(200,160,80,0.25);
+      border-radius: 1px;
+      animation: steam-rise 2s ease-in-out infinite;
+    }
+    #desk-coffee-steam span:nth-child(2) { animation-delay: 0.5s; }
+    #desk-coffee-steam span:nth-child(3) { animation-delay: 1.0s; }
+
+    /* ── Topbar scan line (atmospheric) ─────────────────── */
+    @keyframes topbar-scan {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(400%); }
+    }
+    #topbar::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 25%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0,212,255,0.04), transparent);
+      animation: topbar-scan 8s linear infinite;
+      pointer-events: none;
+    }
+
+    /* ── Correct decision stamp bounce ──────────────────── */
+    @keyframes stamp-correct {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(1.06); }
+      60%  { transform: scale(0.97); }
+      100% { transform: scale(1); }
+    }
+    .decision-correct { animation: stamp-correct 0.35s ease; }
+
+    /* ── Wrong decision shake ────────────────────────────── */
+    @keyframes shake-wrong {
+      0%,100% { transform: translateX(0); }
+      20%     { transform: translateX(-5px); }
+      40%     { transform: translateX(5px); }
+      60%     { transform: translateX(-3px); }
+      80%     { transform: translateX(3px); }
+    }
+    .decision-wrong { animation: shake-wrong 0.35s ease; }
+
+    /* ── HUD money colour transition ─────────────────────── */
+    #stat-money { transition: color 0.4s ease; }
+
+    /* ── Passenger photo idle breathing ──────────────────── */
+    @keyframes photo-breathe {
+      0%,100% { transform: scale(1); }
+      50%     { transform: scale(1.008); }
+    }
+    #passenger-photo.idle {
+      animation: photo-breathe 4s ease-in-out infinite;
+    }
+
+    /* ── Alert bar slide down ────────────────────────────── */
+    @keyframes alertbar-in {
+      from { transform: translateY(-100%); opacity: 0; }
+      to   { transform: translateY(0);     opacity: 1; }
+    }
+    #alert-bar.show {
+      animation: alertbar-in 0.3s ease forwards;
+    }
   </style>
 </head>
 <body>
@@ -1684,7 +1827,11 @@
 
   <!-- ── DESK DECORATIONS ───────────────────────────── -->
   <div id="desk-lamp-glow"></div>
-  <div id="desk-coffee"></div>
+  <div id="desk-coffee">
+    <div id="desk-coffee-steam">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
 
   <!-- ── FEATURE NOTIFICATION (slide-in from top) ───── -->
   <div id="feature-notif" style="position:absolute;top:0;left:50%;transform:translateX(-50%) translateY(-100%);
@@ -1724,7 +1871,10 @@
 
 <!-- ─────────────────────────────────────────────────────
      SCRIPTS
+     src/main.js bootstraps the new module architecture and
+     patches window.* globals BEFORE the legacy scripts run.
 ───────────────────────────────────────────────────── -->
+<script type="module" src="src/main.js"></script>
 <script src="lang.js"></script>
 <script src="game.js"></script>
 <script src="story.js"></script>
